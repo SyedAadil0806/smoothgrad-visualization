@@ -75,3 +75,7 @@ Enter the image number you want to use:
 ## 4. Output
 
 The generated output image will be shown to you as well as automatically be saved inside the `outputs` folder.
+
+## 5. GitHub link
+
+https://github.com/SyedAadil0806/smoothgrad-visualization
