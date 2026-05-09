@@ -83,8 +83,13 @@ def get_normal_gradient(model, input_tensor): #Creates the normal gradient sensi
 def get_smoothgrad(model, input_tensor, target_class, samples=50, noise_level=0.15): #Implements SmoothGrad
     total_gradient = torch.zeros_like(input_tensor)
 
+    # FIX 1: Scale noise to input range so noise_level is a true fraction of
+    # the input's value range, matching the paper's definition of
+    # sigma / (x_max - x_min).
+    input_range = input_tensor.max() - input_tensor.min()
+
     for i in range(samples):
-        noise = torch.randn_like(input_tensor) * noise_level
+        noise = torch.randn_like(input_tensor) * noise_level * input_range
 
         noisy_image = (input_tensor + noise).detach()
         noisy_image.requires_grad_(True)
@@ -106,6 +111,11 @@ def get_smoothgrad(model, input_tensor, target_class, samples=50, noise_level=0.
 
 
 def normalize_map(gradient_map): #Makes heatmap values between 0 and 1
+    # FIX 2: Cap at 99th percentile before normalizing, as recommended by the
+    # paper to prevent a few outlier pixels from washing out the entire map.
+    p99 = np.percentile(gradient_map, 99)
+    gradient_map = np.clip(gradient_map, 0, p99)
+
     gradient_map = gradient_map - gradient_map.min()
 
     if gradient_map.max() != 0:
